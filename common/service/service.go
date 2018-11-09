@@ -572,3 +572,4 @@ func (h *Handler) Status(ctx context.Context, in *empty.Empty, out *proto.Status
 
 	return nil
 }
+
