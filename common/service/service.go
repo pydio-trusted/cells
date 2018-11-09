@@ -40,6 +40,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gyuho/goraph"
 	"github.com/micro/go-micro"
 	"github.com/micro/go-micro/client"
@@ -55,6 +56,7 @@ import (
 	"github.com/pydio/cells/common/log"
 	"github.com/pydio/cells/common/registry"
 	"github.com/pydio/cells/common/service/context"
+	proto "github.com/pydio/cells/common/service/proto"
 
 	"github.com/pydio/cells/common/sql"
 	"github.com/pydio/cells/common/utils"
@@ -689,3 +691,14 @@ func (s *service) getContext() context.Context {
 
 // RestHandlerBuilder builds a RestHandler
 type RestHandlerBuilder func(service web.Service, defaultClient client.Client) interface{}
+
+type Handler struct {
+	service micro.Service
+}
+
+// Status of the service - If we reach this point, it means that this micro service is correctly up and running
+func (h *Handler) Status(ctx context.Context, in *empty.Empty, out *proto.StatusResponse) error {
+	out.OK = true
+
+	return nil
+}

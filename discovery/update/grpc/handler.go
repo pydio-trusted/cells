@@ -23,6 +23,8 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"net/url"
+	"strconv"
 
 	"go.uber.org/zap"
 
@@ -83,13 +85,21 @@ func (h *Handler) ApplyUpdate(ctx context.Context, request *update.ApplyUpdateRe
 	}
 
 	log.Logger(ctx).Info("Update binary now", zap.Any("package", apply))
-	if err := update2.ApplyUpdate(ctx, apply, configs, false); err != nil {
+	err := update2.ApplyUpdate(ctx, apply, configs, false)
+	if err != nil {
 		log.Logger(ctx).Error("Failed updating binary", zap.Error(err))
 		return err
-	} else {
-		response.Success = true
-		response.Message = "Update success - Please restart now!"
-		log.Logger(ctx).Info("Update success - Please restart!")
+	}
+
+	response.Success = true
+	response.Message = "Update success - Please restart now!"
+	log.Logger(ctx).Info("Update success - Please restart!")
+
+	// Double check if we are on a protected port and log a hint in such case.
+	intURL, _ := url.Parse(config.Get("defaults", "urlInternal").String(""))
+	port, err := strconv.Atoi(intURL.Port())
+	if err == nil && port < 1024 {
+		log.Logger(ctx).Info("WARNING: you are using the reserved port %d, you should execute following command to authorize the new binary to use them before restarting your instance:      sudo setcap 'cap_net_bind_service=+ep' <path to your binary>    ")
 	}
 
 	return nil
