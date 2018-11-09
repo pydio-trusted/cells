@@ -36,6 +36,7 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -329,6 +330,17 @@ func (s *service) Start() {
 				cancel()
 			}
 			if err := s.Options().Micro.Run(); err != nil {
+
+				// Small hack to provide more feed back in the situation of the well known error when setcap is necessary
+				pattern := regexp.MustCompile("listen tcp :\\d{1,4}: bind: permission denied")
+				pattern2 := regexp.MustCompile("\\d{1,4}")
+				if pattern.MatchString(err.Error()) {
+					port, _ := strconv.Atoi(pattern2.FindString(err.Error()))
+					if port < 1024 {
+						log.Logger(ctx).Error(fmt.Sprintf("\n#############################\n\nERROR:\n\n Cannot bind to port %d\n You should probably run:\n\n  sudo setcap 'cap_net_bind_service=+ep' <path to your binary>\n\n Otherwise the main proxy cannot start and your application will be unreachable. \n\n#############################", port))
+					}
+				}
+
 				log.Logger(ctx).Error("Could not run ", zap.Error(err))
 				cancel()
 			}
