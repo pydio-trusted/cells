@@ -34,7 +34,9 @@ import (
 
 	"github.com/pydio/cells/common"
 	"github.com/pydio/cells/common/config"
+	"github.com/pydio/cells/common/log"
 	"github.com/pydio/cells/common/service"
+	errorUtils "github.com/pydio/cells/common/utils/error"
 )
 
 func init() {
@@ -76,6 +78,11 @@ func init() {
 			// start caddy server
 			instance, err := caddy.Start(caddyfile)
 			if err != nil {
+
+				if isErr, port := errorUtils.IsErrorPortPermissionDenied(err); isErr {
+					log.Logger(ctx).Error(fmt.Sprintf("\n#############################\n\nERROR:\n\n Cannot bind to port %d\n You should probably run:\n\n  sudo setcap 'cap_net_bind_service=+ep' <path to your binary>\n\n Otherwise the main proxy cannot start and your application will be unreachable. \n\n#############################", port))
+				}
+
 				return nil, nil, nil, err
 			}
 
