@@ -128,6 +128,7 @@ var Transfer = function (_React$Component) {
 
             var children = item.getChildren();
             var isDir = item instanceof UploaderModel.FolderItem;
+            var isPart = item instanceof UploaderModel.PartItem;
             var isSession = item instanceof UploaderModel.Session;
 
             var styles = {
@@ -150,7 +151,7 @@ var Transfer = function (_React$Component) {
                     display: 'inline-block',
                     width: 36,
                     textAlign: 'center',
-                    color: '#616161',
+                    color: isPart ? '#9e9e9e' : '#616161',
                     fontSize: 16
                 },
                 previewImage: {
@@ -162,7 +163,9 @@ var Transfer = function (_React$Component) {
                     borderRadius: '50%'
                 },
                 label: {
-                    fontWeight: isDir ? 500 : 400
+                    fontWeight: isDir ? 500 : 400,
+                    color: isPart ? '#9e9e9e' : null,
+                    fontStyle: isPart ? 'italic' : null
                 },
                 pgBar: {
                     width: 80,
@@ -191,7 +194,7 @@ var Transfer = function (_React$Component) {
                 pgColor = void 0;
 
             if (children.length) {
-                if (open || isSession && status === 'ready') {
+                if (open || isSession && status !== 'analyse') {
                     var sliced = showAll ? children : children.slice(0, limit);
                     childComps = sliced.map(function (child) {
                         return _react2.default.createElement(Transfer, {
@@ -232,6 +235,11 @@ var Transfer = function (_React$Component) {
                 if (progress === 100) {
                     pgColor = '#4caf50';
                 }
+            } else if (isPart) {
+                iconClass = "mdi mdi-package-up";
+                if (progress === 100) {
+                    pgColor = '#4caf50';
+                }
             } else {
                 var _status = item.getStatus();
                 iconClass = "mdi mdi-file";
@@ -240,7 +248,7 @@ var Transfer = function (_React$Component) {
                     var _extensions$get = extensions.get(ext),
                         fontIcon = _extensions$get.fontIcon;
 
-                    iconClass = 'mdi mdi-' + fontIcon;
+                    iconClass = 'mimefont mdi mdi-' + fontIcon;
                 }
 
                 if (_status === 'loading') {
@@ -264,18 +272,18 @@ var Transfer = function (_React$Component) {
             var progressBar = _react2.default.createElement(_materialUi.LinearProgress, { style: { backgroundColor: '#eeeeee' }, color: pgColor, min: 0, max: 100, value: progress, mode: "determinate" });
 
             if (isSession) {
-                if (status === 'ready') {
-                    return _react2.default.createElement(
-                        'div',
-                        null,
-                        childComps
-                    );
-                } else {
+                if (status === 'analyse') {
                     label = "Preparing files and folders for upload...";
                     progressBar = null;
                     toggleCallback = null;
                     toggleOpen = null;
                     rightButton = _react2.default.createElement(_materialUi.CircularProgress, { size: 16, thickness: 2, style: { marginTop: 1 } });
+                } else {
+                    return _react2.default.createElement(
+                        'div',
+                        null,
+                        childComps
+                    );
                 }
             }
 

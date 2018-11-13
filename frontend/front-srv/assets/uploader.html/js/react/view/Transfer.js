@@ -88,6 +88,7 @@ class Transfer extends React.Component{
         const {open, showAll, progress, status, previewUrl} = this.state;
         const children = item.getChildren();
         let isDir = item instanceof UploaderModel.FolderItem;
+        const isPart = item instanceof UploaderModel.PartItem;
         let isSession = item instanceof UploaderModel.Session;
 
         const styles = {
@@ -111,7 +112,7 @@ class Transfer extends React.Component{
                 display: 'inline-block',
                 width: 36,
                 textAlign: 'center',
-                color: '#616161',
+                color: isPart ? '#9e9e9e' : '#616161',
                 fontSize: 16
             },
             previewImage: {
@@ -124,6 +125,8 @@ class Transfer extends React.Component{
             },
             label: {
                 fontWeight: isDir ? 500: 400,
+                color: isPart ? '#9e9e9e' : null,
+                fontStyle: isPart ? 'italic' : null,
             },
             pgBar: {
                 width: 80,
@@ -147,7 +150,7 @@ class Transfer extends React.Component{
         let childComps = [], iconClass, rightButton, leftIcon, toggleOpen, toggleCallback, pgColor;
 
         if (children.length){
-            if(open || (isSession && status === 'ready')){
+            if(open || (isSession && status !== 'analyse')){
                 const sliced = showAll ? children : children.slice(0, limit);
                 childComps = sliced.map(child => <Transfer
                     key={child.getId()}
@@ -169,10 +172,17 @@ class Transfer extends React.Component{
             toggleOpen = <span onClick={toggleCallback} style={styles.toggleIcon} className={"mdi mdi-chevron-" + (open?"down":"right")}/>;
         }
 
-        if(isDir){
+        if(isDir) {
             iconClass = "mdi mdi-folder";
-            rightButton = <span className="mdi mdi-delete" onClick={()=>{this.remove()}}/>;
-            if(progress === 100){
+            rightButton = <span className="mdi mdi-delete" onClick={() => {
+                this.remove()
+            }}/>;
+            if (progress === 100) {
+                pgColor = '#4caf50';
+            }
+        }else if (isPart){
+            iconClass = "mdi mdi-package-up";
+            if (progress === 100) {
                 pgColor = '#4caf50';
             }
         } else {
@@ -181,7 +191,7 @@ class Transfer extends React.Component{
             const ext = PathUtils.getFileExtension(item.getFullPath());
             if(extensions.has(ext)) {
                 const {fontIcon} = extensions.get(ext);
-                iconClass = 'mdi mdi-' + fontIcon;
+                iconClass = 'mimefont mdi mdi-' + fontIcon;
             }
 
             if(status === 'loading') {
@@ -200,14 +210,14 @@ class Transfer extends React.Component{
 
         if(isSession){
             // Do not display level 0
-            if(status === 'ready'){
-                return <div>{childComps}</div>
-            } else {
+            if (status === 'analyse') {
                 label = "Preparing files and folders for upload...";
                 progressBar = null;
                 toggleCallback = null;
                 toggleOpen = null;
                 rightButton = <CircularProgress size={16} thickness={2} style={{marginTop: 1}}/>
+            } else {
+                return <div>{childComps}</div>
             }
         }
 
